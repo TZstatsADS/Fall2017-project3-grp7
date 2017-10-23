@@ -43,7 +43,7 @@ testing<- readRDS("../output/testing.RData")
 training_y<- training[ , "y"]
 training_x<- training[ ,!(colnames(training) %in% c("y"))]
 testing_y<- testing[ ,"y"]
-tetsing_x<- testing[ , !(colnames(testing) %in% c("y"))]
+testing_x<- testing[ , !(colnames(testing) %in% c("y"))]
 ```
 
 
