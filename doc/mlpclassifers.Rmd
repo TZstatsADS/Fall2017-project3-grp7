@@ -1,0 +1,47 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#install.packages("neuralnet")
+install.packages("nnet")
+install.packages("monmlp")
+install.packages('RSNNS')
+```
+
+```{r}
+library(neuralnet)
+library(monmlp)
+library('RSNNS')
+library("dplyr")
+```
+
+###step0:processing data
+```{r}
+sift_train<- read.csv("/Users/linhan/Desktop/Fall2017-project3-fall2017-project3-grp7/data/training_set/sift_train.csv")
+label_train<- read.csv("/Users/linhan/Desktop/Fall2017-project3-fall2017-project3-grp7/data/training_set/label_train.csv")
+```
+
+```{r}
+training_y<- matrix(label_train[, 2],ncol=1)
+colnames(training_y)<-"y"
+#training_x<- matrix(sift_train[, -1],ncol=5000, nrow = 3000)
+training_x<- sift_train[, -1]
+training1<- training_x
+training1$y<- training_y
+training<- sample_frac(training1, 0.7, replace=TRUE)
+testing<- training1.drop(training.index)
+```
+
+###Step1: MLPClassifiers Neural Network Models
+```{r}
+model<- mlp(training_x, training_y, size=5, learnFuncParams=c(0.1), 
+              maxit=50, initFunc = "Randomize_Weights",
+  learnFunc = "Std_Backpropagation",
+updateFunc = "Topological_Order",
+  hiddenActFunc = "Act_Logistic",
+ shufflePatterns = TRUE, linOut = FALSE, inputsTest = NULL,
+ targetsTest = NULL)
+summary(model)
+```
