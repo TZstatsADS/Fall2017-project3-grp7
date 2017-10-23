@@ -5,33 +5,49 @@ output: html_notebook
 
 ```{r}
 #install.packages("neuralnet")
-install.packages("nnet")
-install.packages("monmlp")
-install.packages('RSNNS')
+#install.packages("nnet")
+#install.packages("monmlp")
+#install.packages('RSNNS')
 ```
 
 ```{r}
-library(neuralnet)
-library(monmlp)
-library('RSNNS')
+#library(neuralnet)
+#library(monmlp)
+#library('RSNNS')
 library("dplyr")
 ```
 
-###step0:processing data
-```{r}
+```{r,warning= FALSE}
 sift_train<- read.csv("../data/training_set/sift_train.csv")
 label_train<- read.csv("../data/training_set/label_train.csv")
-```
-
-```{r}
 training_y<- matrix(label_train[, 2],ncol=1)
 colnames(training_y)<-"y"
 #training_x<- matrix(sift_train[, -1],ncol=5000, nrow = 3000)
 training_x<- sift_train[, -1]
 training1<- training_x
 training1$y<- training_y
-training<- sample_frac(training1, 0.7, replace=TRUE)
-testing<- training1.drop(training.index)
+training<- sample_frac(training1, 0.7, replace=FALSE)
+testing<- setdiff(training1, training, 'rows')
+saveRDS(training, "../output/training.RData")
+saveRDS(testing, "../output/testing.RData")
 ```
+
+
+###step1: using the data
+```{r}
+training<- readRDS("../output/training.RData")
+testing<- readRDS("../output/testing.RData")
+```
+
+```{r}
+training_y<- training[ , "y"]
+training_x<- training[ ,!(colnames(training) %in% c("y"))]
+testing_y<- testing[ ,"y"]
+tetsing_x<- testing[ , !(colnames(testing) %in% c("y"))]
+```
+
+
+###Model Selection
+###Model1: MLPClassifiers Neural Network Models
 
 
