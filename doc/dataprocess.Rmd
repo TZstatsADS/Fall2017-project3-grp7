@@ -19,8 +19,8 @@ library("dplyr")
 
 ###step0:processing data
 ```{r}
-sift_train<- read.csv("/Users/linhan/Desktop/Fall2017-project3-fall2017-project3-grp7/data/training_set/sift_train.csv")
-label_train<- read.csv("/Users/linhan/Desktop/Fall2017-project3-fall2017-project3-grp7/data/training_set/label_train.csv")
+sift_train<- read.csv("../data/training_set/sift_train.csv")
+label_train<- read.csv("../data/training_set/label_train.csv")
 ```
 
 ```{r}
