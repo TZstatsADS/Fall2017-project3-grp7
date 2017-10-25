@@ -1,0 +1,99 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#install.packages("neuralnet")
+#install.packages("nnet")
+#install.packages("monmlp")
+#install.packages('RSNNS')
+```
+
+```{r}
+#library(neuralnet)
+#library(monmlp)
+#library('RSNNS')
+library("dplyr")
+```
+
+```{r,warning= FALSE}
+sift_train<- read.csv("../data/training_set/sift_train.csv")
+label_train<- read.csv("../data/training_set/label_train.csv")
+training_y<- matrix(label_train[, 2],ncol=1)
+colnames(training_y)<-"y"
+#training_x<- matrix(sift_train[, -1],ncol=5000, nrow = 3000)
+training_x<- sift_train[, -1]
+training1<- training_x
+training1$y<- training_y
+training<- sample_frac(training1, 0.7, replace=FALSE)
+testing<- setdiff(training1, training, 'rows')
+saveRDS(training, "../output/training.RData")
+saveRDS(testing, "../output/testing.RData")
+```
+
+
+###step1: using the data
+```{r}
+training<- readRDS("../output/training.RData")
+testing<- readRDS("../output/testing.RData")
+```
+
+```{r}
+training_y<- training[ , "y"]
+training_x<- training[ ,!(colnames(training) %in% c("y"))]
+testing_y<- testing[ ,"y"]
+testing_x<- testing[ , !(colnames(testing) %in% c("y"))]
+```
+
+
+###Model Selection
+###Mode: Support Vector Machine for multi-class  classification
+
+We will perform multi-class classification using the one-versus-one approach, this is taken care of by the function svm() itself.
+
+
+```{r}
+library(e1071)
+trainingData=data.frame(x=training_x, y=as.factor(training_y))
+testData=data.frame(x=training_x, y=as.factor(training_y))
+set.seed(1)
+
+tune.out = tune(svm, y~. , data=trainingData, kernel ="linear", ranges = list(cost= c(0.001 , 0.01 , 0.1 , 1 ,5 ,10 ,100)))
+Linear.bestmod = tune.out$best.model
+summary(Linear.bestmod)
+
+Linear.ypred=predict(Linear.bestmod,testData)
+table(predict=Linear.ypred, truth=testData$y)
+
+
+
+NonLinear.tune.out = tune(svm, y~. , data=trainingData, kernel ="radial", ranges=list(cost=c(0.1,1,10,100,1000), gamma=c(0.5, 1, 2, 3, 4)))
+NonLinear.bestmod = tune.out$best.model
+summary(NonLinear.bestmod)
+
+NonLinear.ypred=predict(NonLinear.bestmod,testData)
+table(predict=NonLinear.ypred, truth=testData$y)
+
+```
+dat = data . frame ( x =x , y = as . factor ( y ) )
+
+
+> set . seed (1)
+> tune . out = tune ( svm , y∼. , data = dat , kernel =" linear " ,
+ranges = list ( cost = c (0.001 , 0.01 , 0.1 , 1 ,5 ,10 ,100) ) )
+> bestmod = tune . out$best . model
+> summary ( bestmod )
+> ypred = predict ( bestmod , testdat )
+> table ( predict = ypred , truth = testdat$y )
+> plot ( svmfit , dat )
+
+
+set . seed (1)
+> tune . out = tune ( svm , y∼. , data = dat [ train ,] , kernel =" radial " ,
+ranges = list ( cost = c (0.1 ,1 ,10 ,100 ,1000) ,
+gamma = c (0.5 ,1 ,2 ,3 ,4) ) )
+> summary ( tune . out )
+
+table ( true = dat [ - train ," y "] , pred = predict ( tune . out$best . model ,
+newdata = dat [ - train ,]) )
