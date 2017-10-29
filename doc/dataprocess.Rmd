@@ -16,7 +16,7 @@ output: html_notebook
 #library('RSNNS')
 library("dplyr")
 ```
-
+##############sift_feature processing##########
 ```{r,warning= FALSE}
 sift_train<- read.csv("../data/training_set/sift_train.csv")
 label_train<- read.csv("../data/training_set/label_train.csv")
@@ -31,7 +31,44 @@ testing<- setdiff(training1, training, 'rows')
 saveRDS(training, "../output/training.RData")
 saveRDS(testing, "../output/testing.RData")
 ```
-
+##############RGB feature processing#########
+```{r,warning= FALSE}
+rgb_train<- readRDS("../output/rgb_feature.RData")
+rgb_train<- as.data.frame(rgb_train)
+label_train<- read.csv("../data/training_set/label_train.csv")
+training_y<- matrix(label_train[, 2],ncol=1)
+colnames(training_y)<-"y"
+#training_x<- matrix(sift_train[, -1],ncol=5000, nrow = 3000)
+training_x<- rgb_train
+training1<- training_x
+training1$y<- training_y
+#training1<- as.data.frame(training1)
+training<- sample_frac(training1, 0.7, replace=FALSE)
+testing<- setdiff(training1, training, 'rows')
+rgb_data<- training1
+write.csv(training, file = "../output/rgb_training.csv", row.names = FALSE)
+write.csv(testing, file = "../output/rgb_testing.csv", row.names = FALSE)
+write.csv(rgb_data,file="../output/rgb_feature.csv",row.names = FALSE)
+```
+##############HSV feature processing##########
+```{r,warning= FALSE}
+hsv_train<- readRDS("../output/hsv_feature.RData")
+hsv_train<- as.data.frame(hsv_train)
+label_train<- read.csv("../data/training_set/label_train.csv")
+training_y<- matrix(label_train[, 2],ncol=1)
+colnames(training_y)<-"y"
+#training_x<- matrix(sift_train[, -1],ncol=5000, nrow = 3000)
+training_x<- hsv_train
+training1<- training_x
+training1$y<- training_y
+#training1<- as.data.frame(training1)
+training<- sample_frac(training1, 0.7, replace=FALSE)
+testing<- setdiff(training1, training, 'rows')
+hsv_data<- training1
+write.csv(training, file = "../output/hsv_training.csv", row.names = FALSE)
+write.csv(testing, file = "../output/hsv_testing.csv", row.names = FALSE)
+write.csv(hsv_data,file="../output/hsv_feature.csv",row.names = FALSE)
+```
 
 ###step1: using the data
 ```{r}
