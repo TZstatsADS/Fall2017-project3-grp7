@@ -22,7 +22,6 @@ sift_train<- read.csv("../data/training_set/sift_train.csv")
 label_train<- read.csv("../data/training_set/label_train.csv")
 training_y<- matrix(label_train[, 2],ncol=1)
 colnames(training_y)<-"y"
-#training_x<- matrix(sift_train[, -1],ncol=5000, nrow = 3000)
 training_x<- sift_train[, -1]
 training1<- training_x
 training1$y<- training_y
@@ -38,11 +37,9 @@ rgb_train<- as.data.frame(rgb_train)
 label_train<- read.csv("../data/training_set/label_train.csv")
 training_y<- matrix(label_train[, 2],ncol=1)
 colnames(training_y)<-"y"
-#training_x<- matrix(sift_train[, -1],ncol=5000, nrow = 3000)
 training_x<- rgb_train
 training1<- training_x
 training1$y<- training_y
-#training1<- as.data.frame(training1)
 training<- sample_frac(training1, 0.7, replace=FALSE)
 testing<- setdiff(training1, training, 'rows')
 rgb_data<- training1
@@ -57,11 +54,9 @@ hsv_train<- as.data.frame(hsv_train)
 label_train<- read.csv("../data/training_set/label_train.csv")
 training_y<- matrix(label_train[, 2],ncol=1)
 colnames(training_y)<-"y"
-#training_x<- matrix(sift_train[, -1],ncol=5000, nrow = 3000)
 training_x<- hsv_train
 training1<- training_x
 training1$y<- training_y
-#training1<- as.data.frame(training1)
 training<- sample_frac(training1, 0.7, replace=FALSE)
 testing<- setdiff(training1, training, 'rows')
 hsv_data<- training1
