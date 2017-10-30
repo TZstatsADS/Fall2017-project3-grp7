@@ -1,0 +1,114 @@
+---
+title: "GBM Model & Features"
+author: "Qian Shi (qs2164)"
+date: "10/30/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##### Build a CV Function #####
+```{r}
+# Cross Validation function
+cross_valid<- function(data, K){
+  n<- dim(data)[1]
+  d<- dim(data)[2]
+  label<- data$y
+  folds<- sample(rep(1:K, each=n/K))
+  cv_acu<- c()
+  time<- c()
+  for(i in 1:K){
+    train<- data[folds != i, -d]
+    train_lab<- label[folds != i]
+    validate<- data[folds == i, -d]
+    validate_lab<- label[folds == i]
+    
+    gbm<- gbm(train_lab~., 
+              data=train,
+              interaction.depth=3,
+              shrinkage=0.02,
+              n.trees=600,
+              distribution='multinomial')
+    pred<- predict.gbm(gbm,
+                       validate,
+                       n.trees=gbm$n.trees,
+                       type='response')
+    cv_acu[i]<- sum(apply(pred, 1, which.max) - 1 == validate_lab) / length(validate_lab)
+    time[i]<- system.time(gbm<- gbm(train_lab~., 
+                                    data=train,
+                                    interaction.depth=3,
+                                    shrinkage=0.02,
+                                    n.trees=600,
+                                    distribution='multinomial'))[1]
+  }
+  return(list('Accuracy'= mean(cv_acu), 'Time'= mean(time)))
+}
+```
+
+
+##### Combine GBM Model with Different Features #####
+
+#### 1. GBM & Full SIFT (5000 features)
+```{r}
+training_allSIFT<- readRDS('../output/training.RData')
+testing_allSIFT<- readRDS('../output/testing.RData')
+
+# Cross Validation
+cross_valid(training_allSIFT, K=3)
+```
+
+
+#### 2. GBM & RGB (600 features)
+```{r}
+training_RGB600<- read.csv('../output/rgb_training2.csv')
+testing_RGB600<- read.csv('../output/rgb_testing2.csv')
+
+# Cross Validation
+cross_valid(training_RGB600, K=3)
+```
+
+
+#### 3. GBM & RGB (800 features)
+```{r}
+training_RGB800<- read.csv('../output/rgb_training.csv')
+testing_RGB800<- read.csv('../output/rgb_testing.csv')
+
+# Cross Validation
+cross_valid(training_RGB800, K=3)
+```
+
+
+#### 4. GBM & RGB (1440 features)
+```{r}
+training_RGB1440<- read.csv('../output/rgb_training1.csv')
+testing_RGB1440<- read.csv('../output/rgb_testing1.csv')
+
+# Cross Validation
+cross_valid(training_RGB1440, K=3)
+```
+
+
+#### 5. GBM & HOG (576 features)
+```{r}
+training_HOG<- read.csv('../output/hog_training.csv')
+testing_HOG<- read.csv('../output/hog_testing.csv')
+
+# Cross Validation
+cross_valid(training_HOG, K=3)
+```
+
+
+#### 6. GBM & HSV (360 features)
+```{r}
+training_HSV<- read.csv('../output/hsv_training.csv')
+testing_HSV<- read.csv('../output/hsv_testing.csv')
+
+# Cross Validation
+cross_valid(training_HSV, K=3)
+```
+
+
+
+
