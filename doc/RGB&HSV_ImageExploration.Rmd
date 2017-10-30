@@ -1,0 +1,192 @@
+---
+title: "Image Exploration"
+author: "Qian Shi (qs2164)"
+date: "10/28/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+if(!require(EBImage)){
+  source('http://bioconductor.org/biocLite.R')
+  biocLite('EBImage')
+  library('EBImage')
+}
+
+
+# Pick 9 images to do image exploration
+setwd("~/Desktop/Fall2107-Proj3-Grp7/data/training_set/images")
+i1.c<- readImage('img_0003.jpg')
+i2.c<- readImage('img_0687.jpg')
+i3.c<- readImage('img_0610.jpg')
+
+i1.d<- readImage('img_0049.jpg')
+i2.d<- readImage('img_0719.jpg')
+i3.d<- readImage('img_0484.jpg')
+
+i1.m<- readImage('img_0731.jpg')
+i2.m<- readImage('img_0195.jpg')
+i3.m<- readImage('img_0853.jpg')
+
+filenames<- list(i1.c, i2.c, i3.c, i1.d, i2.d, i3.d, i1.m, i2.m, i3.m)
+
+for(i in 1:9){
+  options("EBImage.display"= "raster") 
+  display(filenames[[i]])
+  hist(filenames[[i]])
+}
+```
+From above plots we can see that, blue color is especially different between chicken and dog, while green color distinguishes muffin from chicken and dog, and this is a key point for extracting RGB features.
+
+
+```{r}
+# Chang to greyscale, blue, green and red channels
+file.bw<- list()
+file.blue<- list()
+file.green<- list()
+file.red<- list()
+
+
+par(mfrow=c(3, 3))
+for(i in 1:9){
+  file.bw[[i]]<- channel(filenames[[i]], mode='grey')
+  options("EBImage.display"= "raster") 
+  display(file.bw[[i]])
+}
+
+for(i in 1:9){
+  file.blue[[i]]<- channel(filenames[[i]], mode='asblue')
+  display(file.blue[[i]])
+}
+
+for(i in 1:9){
+  file.green[[i]]<- channel(filenames[[i]], mode='asgreen')
+  display(file.green[[i]])
+}
+
+for(i in 1:9){
+  file.red[[i]]<- channel(filenames[[i]], mode='asred')
+  display(file.red[[i]])
+}
+```
+
+
+```{r}
+# Extract the texture by high contrast on blue channel, which distinguish difference on chicken from dog and muffin
+file.contrast_blue<- list()
+par(mfrow=c(3, 3))
+for(i in 1:9){
+  file.contrast_blue<- file.blue[[i]] * 5
+  display(file.blue[[i]] * 5)
+}
+
+# Extract the texture by high contrast on blue channel, which distinguish difference on muffin from chicken and dog
+file.contrast_green<- list()
+par(mfrow=c(3, 3))
+for(i in 1:9){
+  file.contrast_green<- file.green[[i]] * 3
+  display(file.green[[i]] * 3)
+}
+```
+
+```{r}
+# Filter: high pass
+fil_high<- matrix(1, nrow=3, ncol=3)
+fil_high[2,2]<- -8
+file.high<- list()
+par(mfrow=c(3, 3))
+for(i in 1:9){
+  file.high<- filter2(filenames[[i]], fil_high)
+  display(file.high)
+}
+```
+
+
+```{r}
+# Color features from RGB
+
+## (nR,nG,nB) are tuning parameters for constructing color features
+mat<- list()
+freq_RGB<- list()
+nR<- 8
+nG<- 10
+nB<- 10
+Rbin<- seq(0, 1, length.out=nR)
+Gbin<- seq(0, 1, length.out=nG)
+Bbin<- seq(0, 1, length.out=nB)
+RGB_features<- matrix(nrow=9, ncol=nR * nG * nB)
+dim(RGB_features)   #800 features
+
+for(i in 1:9){
+  mat[[i]]<- imageData(filenames[[i]])
+  freq_RGB[[i]]<- as.data.frame(table(factor(findInterval(mat[[i]][, , 1], Rbin), levels=1:nR), 
+                                      factor(findInterval(mat[[i]][, , 2], Gbin), levels=1:nG), 
+                                      factor(findInterval(mat[[i]][, , 3], Bbin), levels=1:nB)))
+  RGB_features[i, ]<- as.numeric(freq_RGB[[i]]$Freq) / (ncol(mat[[i]]) * nrow(mat[[i]]))
+}
+plot(RGB_features[1, 0:200], type='l', col='red', ylim=c(0,0.1))  # chicken
+lines(RGB_features[4, 0:200], type='l', col='green')   # dog
+lines(RGB_features[7, 0:200], type='l', col='blue')    # muffin
+
+# Test on these 9 images by usnig GBM model
+if(!require(gbm)){
+  install.packages('gbm')
+  library('gbm')
+}
+
+labels<-c(0,0,0,1,1,1,2,2,2)    # '0' for chicken, '1' for dog, '2' for muffin
+gbm_model<- gbm(labels~., 
+                data=data.frame(RGB_features),
+                interaction.depth=3,
+                shrinkage=0.02,
+                n.trees=600,
+                distribution='multinomial',
+                n.minobsinnode=1)
+pred<- predict(gbm_model, 
+               data.frame(RGB_features),
+               n.trees=gbm_model$n.trees,
+               type='response')
+sum(apply(pred, 1, which.max) - 1 == labels) / length(labels)
+```
+
+
+```{r}
+# Color features from HSV
+
+## (nH, nS, nV) are tuning parameters for constructing color features
+if(!require(grDevices)){
+  install.packages('grDevices')
+  library('grDevices')
+}
+
+nH<- 10
+nS<- 6
+nV<- 6
+Hbin<- seq(0, 1, length.out=nH)
+Sbin<- seq(0, 1, length.out=nS)
+Vbin<- seq(0, 1, length.out=nV)
+
+mat_RGB<- mat
+mat_HSV<- list()
+freq_HSV<- list()
+HSV_features<- matrix(nrow=9, ncol=nH * nS * nV)
+
+for(i in 1:9){
+  dim(mat_RGB[[i]])<- c(nrow(mat[[i]]) * ncol(mat[[i]]), 3)  #Convert 3D array of RGB into 2D matrix
+  mat_HSV[[i]]<- rgb2hsv(t(mat_RGB[[i]]))
+  freq_HSV[[i]]<- as.data.frame(table(factor(findInterval(mat_HSV[[i]][1, ], Hbin), levels=1:nH), 
+                                      factor(findInterval(mat_HSV[[i]][2, ], Sbin), levels=1:nS), 
+                                      factor(findInterval(mat_HSV[[i]][3, ], Vbin), levels=1:nV)))
+  HSV_features[i, ]<- as.numeric(freq_HSV[[i]]$Freq) / (ncol(mat[[i]]) * nrow(mat[[i]]))
+}
+
+plot(HSV_features[1, 0:60], type='l', col='red', ylim=c(0, 0.5))    # chicken
+lines(HSV_features[4, 0:60], type='l', col='green')    # dog
+lines(HSV_features[7, 0:60], type='l', col='blue')     # muffin
+
+```
+
+
