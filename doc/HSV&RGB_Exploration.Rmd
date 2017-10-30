@@ -1,0 +1,121 @@
+---
+title: "Image Exploration"
+author: "Qian Shi (qs2164)"
+date: "10/28/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/Users/linhan/Desktop/semester 3/ADS/Fall2017-project3-fall2017-project3-grp7/data/training_set/images")
+
+if(!require(EBImage)){
+  source('http://bioconductor.org/biocLite.R')
+  biocLite('EBImage')
+  library('EBImage')
+}
+
+
+# Pick 9 images to do image exploration
+i1.c<- readImage('img_0003.jpg')
+i2.c<- readImage('img_0687.jpg')
+i3.c<- readImage('img_0610.jpg')
+
+i1.d<- readImage('img_0049.jpg')
+i2.d<- readImage('img_0719.jpg')
+i3.d<- readImage('img_0484.jpg')
+
+i1.m<- readImage('img_0731.jpg')
+i2.m<- readImage('img_0195.jpg')
+i3.m<- readImage('img_0853.jpg')
+
+filenames<- list(i1.c, i2.c, i3.c, i1.d, i2.d, i3.d, i1.m, i2.m, i3.m)
+
+for(i in 1:9){
+  options("EBImage.display"= "raster") 
+  display(filenames[[i]])
+  hist(filenames[[i]])
+}
+```
+
+
+```{r}
+# Chang to greyscale, blue and red channels
+file.bw<- list()
+file.blue<- list()
+file.green<- list()
+file.red<-list()
+par(mfrow=c(3,3))
+for(i in 1:9){
+  file.bw[[i]]<- channel(filenames[[i]], mode='grey')
+  options("EBImage.display"= "raster") 
+  display(file.bw[[i]])
+}
+for(i in 1:9){
+  file.red[[i]]<- channel(filenames[[i]], mode='asred')
+  display(file.red[[i]])
+}
+for(i in 1:9){
+  file.blue[[i]]<- channel(filenames[[i]], mode='asblue')
+  display(file.blue[[i]])
+}
+
+for(i in 1:9){
+  file.green[[i]]<- channel(filenames[[i]], mode='asgreen')
+  display(file.green[[i]])
+}
+```
+
+
+```{r}
+# Extract the texture by high contrast on blue channel, which distinguish difference on chicken from dog and muffin
+par(mfrow=c(3,3))
+file.contrast_red<- list()
+for(i in 1:9){
+  file.contrast_red<- file.red[[i]] * 5
+  display(file.red[[i]] * 5)
+}
+
+file.contrast_blue<- list()
+for(i in 1:9){
+  file.contrast_blue<- file.blue[[i]] * 5
+  display(file.blue[[i]] * 5)
+}
+
+# Extract the texture by high contrast on blue channel, which distinguish difference on muffin from chicken and dog
+file.contrast_green<- list()
+for(i in 1:9){
+  file.contrast_green<- file.green[[i]] * 3
+  display(file.green[[i]] * 3)
+}
+```
+
+```{r}
+# Filter: high pass
+par(mfrow=c(3,3))
+fil_high<- matrix(1, nrow=3, ncol=3)
+fil_high[2,2]<- -8
+file.high<- list()
+for(i in 1:9){
+  file.high<- filter2(filenames[[i]], fil_high)
+  display(file.high)
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
