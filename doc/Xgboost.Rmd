@@ -1,0 +1,244 @@
+---
+title: "Xgboost"
+author: 'Author: Yijia Li'
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+---
+
+## Load and process data
+
+```{r}
+library(xgboost)
+
+training<- readRDS("../output/training.RData")
+testing<- readRDS("../output/testing.RData")
+training_y<- training[ , "y"]
+training_x<- training[ ,!(colnames(training) %in% c("y"))]
+testing_y<- testing[ ,"y"]
+testing_x<- testing[ , !(colnames(testing) %in% c("y"))]
+```
+
+## Train xgboost model, objective = "multi:softprob"
+
+```{r}
+lb <-training_y
+num_class <- 3
+set.seed(11)
+bst <- xgboost(data = as.matrix(training_x), label = lb,
+               max_depth = 4, eta = 0.5, nthread = 2, nrounds = 100, subsample = 0.5,
+               objective = "multi:softprob", num_class = num_class)
+# predict for softmax returns num_class probability numbers per case:
+pred <- predict(bst, as.matrix(training_x))
+str(pred)
+
+# reshape it to a num_class-columns matrix
+pred <- matrix(pred, ncol=num_class, byrow=TRUE)
+# convert the probabilities to softmax labels
+pred_labels <- max.col(pred) - 1
+# the following should result in the same error as seen in the last iteration
+error = sum(pred_labels != lb)/length(lb)
+1-error #0
+```
+
+## Fit model with test data, objective = "multi:softprob"
+
+```{r}
+lb <-testing_y
+# predict for softmax returns num_class probability numbers per case:
+pred <- predict(bst, as.matrix(testing_x))
+str(pred)
+
+# reshape it to a num_class-columns matrix
+pred <- matrix(pred, ncol=num_class, byrow=TRUE)
+# convert the probabilities to softmax labels
+pred_labels <- max.col(pred) - 1
+# the following should result in the same error as seen in the last iteration
+error = sum(pred_labels != lb)/length(lb)
+1-error #0.77
+```
+
+## Train xgboost model, objective = "multi:softmax"
+
+```{r}
+lb <-training_y
+# compare that to the predictions from softmax:
+set.seed(11)
+bst <- xgboost(data = as.matrix(training_x), label = lb,
+               max_depth = 4, eta = 0.5, nthread = 2, nrounds = 100, subsample = 0.5,
+               objective = "multi:softmax", num_class = num_class)
+pred <- predict(bst, as.matrix(training_x))
+str(pred)
+all.equal(pred, pred_labels)
+# prediction from using only 5 iterations should result
+# in the same error as seen in iteration 5:
+pred5 <- predict(bst, as.matrix(training_x), ntreelimit=5)
+error = sum(pred5 != lb)/length(lb)
+1-error #0.87
+```
+
+## Fit with test data, objective = "multi:softmax"
+
+```{r}
+lb <-testing_y
+pred <- predict(bst, as.matrix(testing_x))
+str(pred)
+all.equal(pred, pred_labels)
+# prediction from using only 5 iterations should result
+# in the same error as seen in iteration 5:
+pred5 <- predict(bst, as.matrix(testing_x), ntreelimit=5)
+error = sum(pred5 != lb)/length(lb)
+1-error #0.71
+```
+
+Based on the accuracy rate, choose objective = "multi:softprob" for the xgboost model.
+
+## Find the best parameter (max_depth, eta, gamma) for the xgboost model
+
+```{r}
+max_depth<-c(3,5,7)
+eta<-c(0.1,0.3,0.5)
+gamma<-c(0,0.02,0.04)
+df <- data.frame(matrix(ncol = 5, nrow = 0))
+
+for(i in 1:3){
+  for(j in 1:3){
+    for(k in 1:3){
+      t = proc.time()
+      lb <- training_y
+      num_class <- 3
+      set.seed(11)
+      bst <- xgboost(data = as.matrix(training_x), label = lb,
+                     max_depth = max_depth[i], eta = eta[j], gamma = gamma[k], 
+                     nthread = 2, nrounds = 100, subsample = 0.5, 
+                     objective = "multi:softprob", num_class = num_class)
+      
+      train_time = (proc.time() - t)[3]
+      cat("max_depth = ", max_depth[i], "eta = ", eta[j], "gamma = ", gamma[k], "Elapsed time = ", train_time, " seconds \n")
+      
+      lb <- testing_y
+      pred <- predict(bst, as.matrix(testing_x))
+      pred <- matrix(pred, ncol=num_class, byrow=TRUE)
+      pred_labels <- max.col(pred) - 1
+      error <- sum(pred_labels != lb)/length(lb)
+      cat("max_depth = ", max_depth[i], "eta = ", eta[j], "gamma = ", gamma[k], "Accuracy rate = " , 1-error, " \n" )
+      
+      df <- rbind(df, c(max_depth[i], eta[j], gamma[k], train_time, 1-error))
+    }
+  }
+}
+
+x <- c("max_depth", "eta", "gamma", "time", "accuracy")
+colnames(df) <- x
+df
+```
+
+Set max_depth = 5, eta = 0.3, gamma = 0.04 since it has the highest accuracy and the least time.
+
+## Use the best parameters to build cross validation function
+
+```{r}
+cv.function <- function(X.train, y.train, K){
+  
+  n <- length(y.train)
+  n.fold <- floor(n/K)
+  s <- sample(rep(1:K, c(rep(n.fold, K-1), n-(K-1)*n.fold)))  
+  cv.error <- rep(NA, K)
+  
+  for (i in 1:K){
+    train.data <- X.train[s != i,]
+    train.label <- y.train[s != i]
+    test.data <- X.train[s == i,]
+    test.label <- y.train[s == i]
+    
+    t = proc.time()
+    lb <-train.label
+    num_class <- 3
+    set.seed(11)
+    bst <- xgboost(data = as.matrix(train.data), label = lb,
+                   max_depth = 5, eta = 0.3, gamma = 0.04,
+                   nthread = 2, nrounds = 100, subsample = 0.5,
+                   objective = "multi:softprob", num_class = num_class)
+    train_time[i] = (proc.time() - t)[3]
+    lb <-test.label
+    pred <- predict(bst, as.matrix(test.data))
+    pred <- matrix(pred, ncol=num_class, byrow=TRUE)
+    pred_labels <- max.col(pred) - 1
+    cv.error[i] <- mean(pred_labels != lb)  
+    
+  }			
+  return(c(mean(1-cv.error),mean(train_time)))
+  
+}
+```
+
+## Feature extraction: sift
+
+```{r}
+x<- read.csv("../data/training_set/sift_train.csv")
+y<- read.csv("../data/training_set/label_train.csv")
+training_y<- matrix(y[, 2],ncol=1)
+colnames(training_y)<-"y"
+training_x<- x[, -1]
+
+cv.function(training_x, training_y, 5)
+# 0.8066667 224.2350000
+```
+
+## Feature extraction: hog
+
+```{r}
+feature<- read.csv("../output/hog_feature.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+cv.function(training_x, training_y, 5)
+# 0.8386667 38.8350000
+```
+
+## Feature extraction: rgb
+
+```{r}
+feature<- read.csv("../output/rgb_training.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+cv.function(training_x, training_y, 5)
+# 0.8986667 33.7768000
+```
+
+## Feature extraction: rgb1
+
+```{r}
+feature<- read.csv("../output/rgb_feature1.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+cv.function(training_x, training_y, 5)
+# 0.9073333 56.5048000
+```
+
+## Feature extraction: rgb2
+
+```{r}
+feature<- read.csv("../output/rgb_feature2.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+cv.function(training_x, training_y, 5)
+# 0.8980 26.7226
+```
+
+## Feature extraction: hsv
+
+```{r}
+feature<- read.csv("../output/hsv_feature.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+cv.function(training_x, training_y, 5)
+# 0.8926667 40.0316000
+```
+
+
