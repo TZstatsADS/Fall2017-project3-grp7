@@ -3,18 +3,14 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+#step0: install libraries & Prepare data
 ```{r}
-#install.packages("neuralnet")
-#install.packages("nnet")
-#install.packages("monmlp")
-#install.packages('RSNNS')
-```
+install.packages("e1071")
+install.packages("dplyr")
 
-```{r}
-#library(neuralnet)
-#library(monmlp)
-#library('RSNNS')
-library("dplyr")
+library(e1071)
+library(dplyr)
+setwd('C:/Users/vc2434/Desktop/Fall2017-project3-fall2017-project3-grp7-master/doc')
 ```
 
 ```{r,warning= FALSE}
@@ -44,56 +40,211 @@ training_y<- training[ , "y"]
 training_x<- training[ ,!(colnames(training) %in% c("y"))]
 testing_y<- testing[ ,"y"]
 testing_x<- testing[ , !(colnames(testing) %in% c("y"))]
+
+trainingData=data.frame(x=training_x, y=as.factor(training_y))
+testData=data.frame(x=testing_x, y=as.factor(testing_y))
 ```
 
 
-###Model Selection
-###Mode: Support Vector Machine for multi-class  classification
+## Support Vector Machine for multi-class classification
 
 We will perform multi-class classification using the one-versus-one approach, this is taken care of by the function svm() itself.
 
+##step2: Using Cross-Validation to find the best parameters
 
+#step 2.1: Linear model:
 ```{r}
-library(e1071)
-trainingData=data.frame(x=training_x, y=as.factor(training_y))
-testData=data.frame(x=training_x, y=as.factor(training_y))
+
 set.seed(1)
 
-tune.out = tune(svm, y~. , data=trainingData, kernel ="linear", ranges = list(cost= c(0.001 , 0.01 , 0.1 , 1 ,5 ,10 ,100)))
-Linear.bestmod = tune.out$best.model
+Linear.tune.out = tune(svm, y~. , data=trainingData, kernel ="linear", ranges = list(cost= c(0.001 , 0.01 , 0.1 , 1 ,5 ,10 ,100)))
+Linear.bestmod = Linear.tune.out$best.model
 summary(Linear.bestmod)
 
 Linear.ypred=predict(Linear.bestmod,testData)
-table(predict=Linear.ypred, truth=testData$y)
+Linear.class.pred <-table(predict=Linear.ypred, truth=testData$y)
+Linear.accuracy<-sum(diag(Linear.class.pred))/sum(Linear.class.pred)
+Linear.accuracy
+```
 
+the best accuracy is found for a parameter cost= 100 for an accuracy of 81.62% on the test data set.
 
-
-NonLinear.tune.out = tune(svm, y~. , data=trainingData, kernel ="radial", ranges=list(cost=c(0.1,1,10,100,1000), gamma=c(0.5, 1, 2, 3, 4)))
-NonLinear.bestmod = tune.out$best.model
+#step 2.1: Non-Linear model:
+```{r}
+NonLinear.tune.out = tune(svm, y~. , data=trainingData, kernel ="radial", ranges=list(cost=c(20,80,140), gamma=c(0.01, 0.1, 1)))
+NonLinear.bestmod = NonLinear.tune.out$best.model
 summary(NonLinear.bestmod)
 
 NonLinear.ypred=predict(NonLinear.bestmod,testData)
-table(predict=NonLinear.ypred, truth=testData$y)
-
+NonLinear.class.pred <-table(predict=NonLinear.ypred, truth=testData$y)
+NonLinear.accuracy<-sum(diag(NonLinear.class.pred))/sum(NonLinear.class.pred)
+NonLinear.accuracy
 ```
-dat = data . frame ( x =x , y = as . factor ( y ) )
+
+the best accuracy is found for parameters: cost=140 and gamma=1 for an accuracy if 76.67% on the test data set.
+
+#Step 3: Using the best parameters to build cross validation function
+```{r}
+cv.function.Linear <- function(X.train, y.train, K){
+  train_time<-c()
+  n <- length(y.train)
+  n.fold <- floor(n/K)
+  s <- sample(rep(1:K, c(rep(n.fold, K-1), n-(K-1)*n.fold)))  
+  cv.error <- rep(NA, K)
+  
+  for (i in 1:K){
+    train.data <- X.train[s != i,]
+    train.label <- y.train[s != i]
+    test.data <- X.train[s == i,]
+    test.label <- y.train[s == i]
+    CV.test=data.frame(x=test.data, y=as.factor(test.label))
+    CV.train=data.frame(x=train.data, y=as.factor(train.label))
+    
+    t = proc.time()
+    lb <-train.label
+    num_class <- 3
+    set.seed(11)
+    CV.svm.model<-svm(y~.,data=CV.train, kernel="linear",cost=100)
+    
+    train_time[i] <- (proc.time() - t)[3]
+    
+    ypred=predict(CV.svm.model, CV.test)
+    class.pred <-table(predict=ypred, truth= CV.test$y)
+    cv.error[i]<-1-sum(diag(class.pred))/sum(class.pred)
+    
+    
+  }  		
+  return(c(mean(1-cv.error),mean(train_time)))
+}
+```
 
 
-> set . seed (1)
-> tune . out = tune ( svm , y∼. , data = dat , kernel =" linear " ,
-ranges = list ( cost = c (0.001 , 0.01 , 0.1 , 1 ,5 ,10 ,100) ) )
-> bestmod = tune . out$best . model
-> summary ( bestmod )
-> ypred = predict ( bestmod , testdat )
-> table ( predict = ypred , truth = testdat$y )
-> plot ( svmfit , dat )
+```{r}
+cv.function.NonLinear <- function(X.train, y.train, K){
+  train_time<-c()
+  n <- length(y.train)
+  n.fold <- floor(n/K)
+  s <- sample(rep(1:K, c(rep(n.fold, K-1), n-(K-1)*n.fold)))  
+  cv.error <- rep(NA, K)
+  
+  for (i in 1:K){
+    train.data <- X.train[s != i,]
+    train.label <- y.train[s != i]
+    test.data <- X.train[s == i,]
+    test.label <- y.train[s == i]
+    CV.test=data.frame(x=test.data, y=as.factor(test.label))
+    CV.train=data.frame(x=train.data, y=as.factor(train.label))
+    
+    t = proc.time()
+    lb <-train.label
+    num_class <- 3
+    set.seed(11)
+    
+    CV.svm.model<-svm(y~.,data=CV.train, kernel="radial",cost=140, gamma=1)
+    
+    train_time[i] <- (proc.time() - t)[3]
+    
+    ypred=predict(CV.svm.model, CV.test)
+    class.pred <-table(predict=ypred, truth= CV.test$y)
+    cv.error[i]<-1-sum(diag(class.pred))/sum(class.pred)
+    
+    
+  }    	
+  return(c(mean(1-cv.error),mean(train_time)))
+}
+```
 
 
-set . seed (1)
-> tune . out = tune ( svm , y∼. , data = dat [ train ,] , kernel =" radial " ,
-ranges = list ( cost = c (0.1 ,1 ,10 ,100 ,1000) ,
-gamma = c (0.5 ,1 ,2 ,3 ,4) ) )
-> summary ( tune . out )
 
-table ( true = dat [ - train ," y "] , pred = predict ( tune . out$best . model ,
-newdata = dat [ - train ,]) )
+## Feature extraction: Sift
+
+```{r}
+x<- read.csv("../data/training_set/sift_train.csv")
+y<- read.csv("../data/training_set/label_train.csv")
+training_y<- matrix(y[, 2],ncol=1)
+colnames(training_y)<-"y"
+training_x<- x[, -1]
+
+cv.function.Linear(training_x, training_y, 5)
+# 0.7046667 73.4600000
+
+
+cv.function.NonLinear(training_x, training_y, 5)
+# 0.6726667 72.7260000
+```
+
+## Feature extraction: hog
+
+```{r}
+feature<- read.csv("../output/hog_feature.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+cv.function.Linear(training_x, training_y, 5)
+# 0.745 6.028
+
+
+cv.function.NonLinear(training_x, training_y, 5)
+# 0.309 16.264
+```
+
+## Feature extraction: rgb
+
+```{r}
+feature<- read.csv("../output/rgb_training.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+cv.function.Linear(training_x, training_y, 5)
+# 0.710 4.712
+
+
+cv.function.NonLinear(training_x, training_y, 5)
+# 0.7452381 4.6360000
+```
+
+## Feature extraction: rgb1
+
+```{r}
+feature<- read.csv("../output/rgb_feature1.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+cv.function.Linear(training_x, training_y, 5)
+# 0.7143333 15.1400000
+
+
+cv.function.NonLinear(training_x, training_y, 5)
+# 0.7523333 14.1240000
+```
+
+## Feature extraction: rgb2
+
+```{r}
+feature<- read.csv("../output/rgb_feature2.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+cv.function.Linear(training_x, training_y, 5)
+# 0.6996667 7.6840000
+
+
+cv.function.NonLinear(training_x, training_y, 5)
+# 0.7573333 7.4820000
+```
+
+## Feature extraction: hsv
+
+```{r}
+feature<- read.csv("../output/hsv_feature.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+cv.function.Linear(training_x, training_y, 5)
+# 0.6926667 4.7600000
+
+
+cv.function.NonLinear(training_x, training_y, 5)
+# 0.7433333 4.9960000
+```
+
