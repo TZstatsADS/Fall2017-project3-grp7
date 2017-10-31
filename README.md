@@ -34,7 +34,7 @@ Term: Fall 2017
 + Han, Lin  
                
 	+ Data processing, include data splitting and cleaning
-	+ Train and test Neural Network model based on SIFT, HOG and HSV
+	+ Train and test MLPClassifier Neural Network model (using Python)based on SIFT, HOG and HSV
 	(pick the best parameter of Neural Network model, test using cross validation) 
 	+ Build the HSV and RGB function and Extract HSV and RGB features
 	+ Generate main.Rmd and feature.R
