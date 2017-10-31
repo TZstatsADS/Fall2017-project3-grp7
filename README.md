@@ -6,7 +6,7 @@
 
 Term: Fall 2017
 
-+ Team #
++ Team 7
 + Team members
 	+ 1 Carantino, Vassily
 	+ 2 Gao, Xin 
@@ -20,26 +20,31 @@ Term: Fall 2017
 **Contribution statement**: ([default](doc/a_note_on_contributions.md)) All team members contributed equally in all stages of this project. All team members approve our work presented in this GitHub repository including this contributions statement. 
 
 + Carantino, Vassily
-        + Train and test SVM (linear and non-linear) model based on SIFT, HOG and HSV 
+        
+	+ Train and test SVM (linear and non-linear) model based on SIFT, HOG and HSV 
 	(pick the best parameter of SVM model, test using cross validation) 
 	+
 	+ Make the presentation
 + Gao, Xin 
+
         + Train and test Random Forest model based on SIFT, HOG and HSV 
 	(pick the best parameter of Random Forest model, test using cross validation) 
 	+ Build the HOG function
 	+ Generate README.Rmd
 + Han, Lin
+
         + Train and test Neural Network model based on SIFT, HOG and HSV
 	(pick the best parameter of Neural Network model, test using cross validation) 
 	+ Build the HSV and RGB function and Extract HSV and RGB features
 	+ Generate main.Rmd
 + Li, Yijia
+
         + Train and test XGBoost model based on SIFT, HOG and HSV 
 	(pick the best parameter of  XGBoost model, test using cross validation) 
 	+ Extract HOG features (pick the best parameter of HOG)
 	+ Generate main.Rmd
 + Shi, Qian
+
         + Train and test gradient boosting machine model based on SIFT, HOG and HSV 
 	(pick the best parameter of gradient boosting machine model, test using cross validation) 
 	+ Build the HSV and RGB function and Extract HSV and RGB features
