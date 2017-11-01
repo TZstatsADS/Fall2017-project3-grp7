@@ -1,6 +1,6 @@
 ---
 title: "Project 3-Dogs, Fried Chicken or Blueberry Muffins?"
-author: "Group7:Lin Han"
+author: "Group7:Lin Han，Qian Shi, Yijia Li, Xin Gao"
 date: "Oct, 2017"
 output:
   pdf_document: default
