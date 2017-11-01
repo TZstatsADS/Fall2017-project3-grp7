@@ -1,0 +1,70 @@
+---
+title: "R Notebook"
+author:"Lin Han"
+output: html_notebook
+---
+
+##############RGB Features Extration Method##############################
+```{r, warning=FALSE}
+source("http://bioconductor.org/biocLite.R")
+biocLite("EBImage")
+```
+
+```{r}
+library("EBImage")
+library(grDevices)
+img_dir <- "../data/training_set/images/"
+n_files <- length(list.files(img_dir))
+```
+
+```{r}
+########### RGB features prep ##############
+nR <- 10
+nG <- 12
+nB <- 12 
+rBin <- seq(0, 1, length.out=nR)
+gBin <- seq(0, 1, length.out=nG)
+bBin <- seq(0, 1, length.out=nB)
+mat=array()
+freq_rgb=array()
+rgb_feature=matrix(nrow=3000, ncol=nR*nG*nB)
+```
+
+```{r}
+########### HSV features prep ##############
+nH <- 10
+nS <- 6
+nV <- 6
+hBin <- seq(0, 1, length.out=nH)
+sBin <- seq(0, 1, length.out=nS)
+vBin <- seq(0, 0.005, length.out=nV) 
+hsv_feature <- matrix(nrow=3000, ncol=nH*nS*nV)
+```
+
+
+###### Extract 1440 RGB & 360 HSV features for chicken #########
+```{r}
+for (i in 1:3000){
+  mat <- imageData(readImage(paste0(img_dir, "img", "_", sprintf("%04.f",i), ".jpg")))
+  mat_as_rgb <-array(c(mat,mat,mat),dim = c(nrow(mat),ncol(mat),3))
+  freq_rgb <- as.data.frame(table(factor(findInterval(mat_as_rgb[,,1], rBin), levels=1:nR), 
+                                  factor(findInterval(mat_as_rgb[,,2], gBin), levels=1:nG),
+                                  factor(findInterval(mat_as_rgb[,,3], bBin), levels=1:nB)))
+  rgb_feature[i,] <- as.numeric(freq_rgb$Freq)/(ncol(mat)*nrow(mat)) # normalization
+  
+  mat_rgb <-mat_as_rgb
+  dim(mat_rgb) <- c(nrow(mat_as_rgb)*ncol(mat_as_rgb), 3)
+  mat_hsv <- rgb2hsv(t(mat_rgb))
+  freq_hsv <- as.data.frame(table(factor(findInterval(mat_hsv[1,], hBin), levels=1:nH),
+                                  factor(findInterval(mat_hsv[2,], sBin), levels=1:nS),
+                                  factor(findInterval(mat_hsv[3,], vBin), levels=1:nV)))
+  hsv_feature[i,] <- as.numeric(freq_hsv$Freq)/(ncol(mat_as_rgb)*nrow(mat_as_rgb)) # normalization
+}
+
+```
+
+
+```{r}
+write.csv(rgb_feature, file = "../output/rgb_feature1.csv",row.names = FALSE)
+write.csv(hsv_feature, file = "../output/hsv_feature.csv")
+```
