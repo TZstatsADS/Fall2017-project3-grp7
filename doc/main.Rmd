@@ -83,7 +83,7 @@ For this simple example, we use the row averages of raw pixel values as the visu
 `feature.R` should be the wrapper for all your feature engineering functions and options. The function `feature( )` should have options that correspond to different scenarios for your project and produces an R object that contains features that are required by all the models you are going to evaluate later. 
 
 ```{r feature}
-set.seed(0)
+set.seed(1)
 source("../lib/feature.R")
 tm_feature_train <- NA
 if(run.feature)
@@ -129,12 +129,12 @@ plot(x,mlpcv,type="l",xlab="hidden layers", ylab="CV accuarcy")
 ```
 We use python scikit-learn library to write MLPClassifier Neural Network Model, testing hidden layer from 1 to 200, and from the above plot, we can get the best hidden layer size=150. Besides, I use stochastic gradient-based optimizer with $beta_1=0.9, $beta_2=0.99, $epsilon=1e-08, the rectified linear unit function to be activition, learning rate to be 0.001. Next, I used all features in the model, like SIFT, HOG, HSV, RGB, using k folds cross-validation to get the accuarcy, and the resuls are as following:
 	     CV	Accuracy    
-HSV  	     77%	        
+HSV  	       77%	        
 RGB	       77.80%	    
-RGB1	     76.20%	     
-RGB2	     77.60%       
+RGB1	       76.20%	     
+RGB2	       77.60%       
 HOG	       82.20%	      
-SIFT	     73%	        
+SIFT	       73%	        
 We can see that the MLPClassifier Model with HOG features is the best. In other models , we can find that RGB(10*12*12) feature is the best which is quite different from MLPClassifier model.
 
 
