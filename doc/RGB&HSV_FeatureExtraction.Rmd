@@ -1,5 +1,5 @@
 ---
-title: "Festure Extraction"
+title: "RGB & HSV Festure Extraction"
 author: "Qian Shi (qs2164)"
 date: "10/28/2017"
 output: pdf_document
@@ -52,8 +52,8 @@ RGB_features$y<- label_train
 training<- sample_frac(RGB_features, 0.7, replace=FALSE)
 testing<- setdiff(RGB_features, training, 'rows')
 
-write.csv(training, file = "../rgb_training2.csv", row.names = FALSE)
-write.csv(testing, file = "../rgb_testing2.csv", row.names = FALSE)
+write.csv(training, file = "../output/rgb_training2.csv", row.names = FALSE)
+write.csv(testing, file = "../output/rgb_testing2.csv", row.names = FALSE)
 write.csv(RGB_features, file="../output/rgb_feature2.csv", row.names = FALSE)
 ```
 
