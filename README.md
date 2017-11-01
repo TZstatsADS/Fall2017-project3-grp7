@@ -49,7 +49,7 @@ We can see that our baseline model is greater than random forest and SVM (linear
 	+ Data processing, include data splitting and cleaning  
 	+ Train and test MLPClassifier Neural Network model (using Python)based on SIFT, HOG and HSV  
 	(pick the best parameter of Neural Network model, test using cross validation) 
-	+ Build the HSV and RGB function and Extract HSV and RGB features
+	+ Build the HSV and RGB1 function and Extract HSV and RGB1 features
 	+ Generate main.Rmd and feature.R
 + Li, Yijia  
         
