@@ -16,7 +16,7 @@ Term: Fall 2017
 
 + Project summary:    
   
-In this project, we created a classification engine for images of Dogs, images of Fried Chicken and images of Blueberry Muffins. We set our baseline model using SIFT features and gradient boosting machine(GBM) classifier. Besides the SIFT features, we also used HOG, RGB and HSV to do feature selection. In terms of classifiers, we considered SVM(linear and non-linear), Random Forest, XGBoost and Neural Network. After model evaluation and comparison, the final advanced model we selected is using RGB feature and XGBoost classifier. We increased the accuracy by 12.25% and only took 13.94% of running time as in baseline model.
+In this project, we created a classification engine for images of Dogs, images of Fried Chicken and images of Blueberry Muffins. We set our baseline model using SIFT features and gradient boosting machine(GBM) classifier. Besides the SIFT features, we also used HOG, RGB and HSV to do feature selection. In terms of classifiers, we considered SVM(linear and non-linear), Random Forest, XGBoost and Neural Network. After model evaluation and comparison, the final advanced model we selected is using RGB feature and XGBoost classifier. We increased the accuracy by 12.0% and only took 11.7% of running time as in baseline model.
 
 + Outcome Analysis  
   
