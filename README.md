@@ -35,31 +35,31 @@ We can see that our baseline model is greater than random forest and SVM (linear
 
 + Carantino, Vassily
         
-	+ Train and test SVM (linear and non-linear) model based on SIFT, HOG and HSV   
+	+ Train and test SVM (linear and non-linear) model based on SIFT, HOG, RGB and HSV   
 	(pick the best parameter of SVM model, test using cross validation) 
 	+ Make the PPT and give the presentation
 + Gao, Xin          
                 
-	+ Train and test Random Forest model based on SIFT, HOG and HSV   
+	+ Train and test Random Forest model based on SIFT, HOG, RGB and HSV   
 	(pick the best parameter of Random Forest model, test using cross validation) 
 	+ Build the HOG function
 	+ Generate README.Rmd and compare all the results
 + Han, Lin  
                
 	+ Data processing, include data splitting and cleaning  
-	+ Train and test MLPClassifier Neural Network model (using Python)based on SIFT, HOG and HSV  
+	+ Train and test MLPClassifier Neural Network model (using Python)based on SIFT, HOG, RGB and HSV  
 	(pick the best parameter of Neural Network model, test using cross validation) 
 	+ Build the HSV and RGB1 function and Extract HSV and RGB1 features
 	+ Generate main.Rmd and feature.R
 + Li, Yijia  
         
-	+ Train and test XGBoost model based on SIFT, HOG and HSV     
+	+ Train and test XGBoost model based on SIFT, HOG, RGB and HSV     
 	(pick the best parameter of  XGBoost model, test using cross validation) 
 	+ Extract HOG features (pick the best parameter of HOG)
 	+ Generate main.Rmd, train.R, test.R, and cross_validation.R
 + Shi, Qian  
         
-	+ Train and test gradient boosting machine model based on SIFT, HOG and HSV   
+	+ Train and test gradient boosting machine model based on RGB, SIFT, HOG and HSV   
 	(pick the best parameter of gradient boosting machine model, test using cross validation) 
 	+ Build the HSV and RGB function and Extract HSV and RGB features
 	+ Generate main.Rmd, train.R, test.R, and cross_validation.R
