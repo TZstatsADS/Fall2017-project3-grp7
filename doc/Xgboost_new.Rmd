@@ -1,0 +1,156 @@
+---
+title: "Xgboost"
+author: 'Author: Yijia Li'
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+---
+
+## Process data
+
+```{r}
+library(xgboost)
+feature<- read.csv("../output/rgb_feature1.csv")
+label_feature<- feature[ , "y"]
+dat_feature<- feature[ ,!(colnames(feature) %in% c("y"))]
+K=5
+```
+
+## Build function to find the best parameters (max_depth, eta) for the xgboost model
+
+```{r}
+xgb_para <- function(dat_train,label_train,K){
+  
+  dtrain = xgb.DMatrix(data=data.matrix(dat_train),label=label_train)
+  max_depth<-c(3,5,7)
+  eta<-c(0.1,0.3,0.5)
+  best_params <- list()
+  best_err <- Inf 
+  para_mat = matrix(nrow=3, ncol=3)
+  
+  for (i in 1:3){
+    for (j in 1:3){
+      my.params <- list(max_depth = max_depth[i], eta = eta[j])
+      set.seed(11)
+      cv.output <- xgb.cv(data=dtrain, params=my.params, 
+                          nrounds = 100, gamma = 0, subsample = 0.5,
+                          objective = "multi:softprob", num_class = 3,
+                          nfold = K, nthread = 2, early_stopping_rounds = 5, 
+                          verbose = 0, maximize = F, prediction = T)
+      
+      min_err <- min(cv.output$evaluation_log$test_merror_mean)
+      para_mat[i,j] <- min_err
+      print(min_err)
+      
+      if (min_err < best_err){
+        best_params <- my.params
+        best_err <- min_err
+      }
+    }
+  }
+  return(list(para_mat, best_params, best_err))
+}
+```
+
+## Find the best parameters for the xgboost model with rgb features
+
+```{r}
+xgbcv_result<- xgb_para(dat_feature,label_feature,K)
+```
+
+## From the above result, set max_depth = 3, eta = 0.3 since it has the highest accuracy.
+
+```{r}
+best_para<-list(max_depth = 3, eta = 0.3, nrounds = 100, gamma = 0,
+                nthread = 2, subsample = 0.5,
+                objective = "multi:softprob", num_class = 3)
+```
+
+## Build train and test function
+
+```{r}
+xgb_train<- function(x, y, params){
+  dtrain = xgb.DMatrix(data=data.matrix(x),label=y)
+  set.seed(11)
+  bst <- xgb.train(data=dtrain, params = params, nrounds = 100)
+  return(bst)
+}
+
+xgb_test<- function(model, x){
+  pred <- predict(model, as.matrix(x))
+  pred <- matrix(pred, ncol=3, byrow=TRUE)
+  pred_labels <- max.col(pred) - 1
+  return(pred_labels)
+}
+```
+
+## Build cross validation function
+
+```{r}
+xgb_cv.function <- function(X.train, y.train, K){
+  
+  n <- length(y.train)
+  n.fold <- floor(n/K)
+  s <- sample(rep(1:K, c(rep(n.fold, K-1), n-(K-1)*n.fold)))  
+  cv.error <- rep(NA, K)
+  train_time <- rep(NA, K)
+  
+  for (i in 1:K){
+    train.data <- X.train[s != i,]
+    train.label <- y.train[s != i]
+    test.data <- X.train[s == i,]
+    test.label <- y.train[s == i]
+    
+    t = proc.time()
+    bst <- xgb_train(train.data, train.label, best_para)
+    train_time[i] = (proc.time() - t)[3]
+    
+    pred_label <- xgb_test(bst, test.data)
+    cv.error[i] <- sum(pred_label != test.label)/length(test.label)
+  }			
+  return(c(mean(1-cv.error),mean(train_time)))
+}
+```
+
+## Feature extraction: rgb1
+
+```{r}
+xgb_cv.function(dat_feature, label_feature, 5)
+# 0.9066667 47.4096000
+```
+
+## Feature extraction: sift
+
+```{r}
+x<- read.csv("../data/training_set/sift_train.csv")
+y<- read.csv("../data/training_set/label_train.csv")
+training_y<- matrix(y[, 2],ncol=1)
+colnames(training_y)<-"y"
+training_x<- x[, -1]
+
+xgb_cv.function(training_x, training_y, 5)
+# 0.798 176.248
+```
+
+## Feature extraction: hog
+
+```{r}
+feature<- read.csv("../output/hog_feature.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+xgb_cv.function(training_x, training_y, 5)
+# 0.8480 27.3778
+```
+
+## Feature extraction: hsv
+
+```{r}
+feature<- read.csv("../output/hsv_feature.csv")
+training_y<- feature[ , "y"]
+training_x<- feature[ ,!(colnames(feature) %in% c("y"))]
+
+xgb_cv.function(training_x, training_y, 5)
+# 0.8926667 13.1184000
+```
