@@ -131,25 +131,6 @@ plot(RGB_features[1, 0:200], type='l', col='red', ylim=c(0,0.1))  # chicken
 lines(RGB_features[4, 0:200], type='l', col='green')   # dog
 lines(RGB_features[7, 0:200], type='l', col='blue')    # muffin
 
-# Test on these 9 images by usnig GBM model
-if(!require(gbm)){
-  install.packages('gbm')
-  library('gbm')
-}
-
-labels<-c(0,0,0,1,1,1,2,2,2)    # '0' for chicken, '1' for dog, '2' for muffin
-gbm_model<- gbm(labels~., 
-                data=data.frame(RGB_features),
-                interaction.depth=3,
-                shrinkage=0.02,
-                n.trees=600,
-                distribution='multinomial',
-                n.minobsinnode=1)
-pred<- predict(gbm_model, 
-               data.frame(RGB_features),
-               n.trees=gbm_model$n.trees,
-               type='response')
-sum(apply(pred, 1, which.max) - 1 == labels) / length(labels)
 ```
 
 

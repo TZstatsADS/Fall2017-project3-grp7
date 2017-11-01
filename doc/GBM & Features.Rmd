@@ -25,10 +25,11 @@ cross_valid<- function(data, K){
     validate<- data[folds == i, -d]
     validate_lab<- label[folds == i]
     
+    # The best parameters has been trained for GBM is shrinkage=0.07, n.trees=600
     gbm<- gbm(train_lab~., 
               data=train,
               interaction.depth=3,
-              shrinkage=0.02,
+              shrinkage=0.07,
               n.trees=600,
               distribution='multinomial')
     pred<- predict.gbm(gbm,
@@ -39,7 +40,7 @@ cross_valid<- function(data, K){
     time[i]<- system.time(gbm<- gbm(train_lab~., 
                                     data=train,
                                     interaction.depth=3,
-                                    shrinkage=0.02,
+                                    shrinkage=0.07,
                                     n.trees=600,
                                     distribution='multinomial'))[1]
   }

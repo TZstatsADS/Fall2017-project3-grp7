@@ -1,0 +1,90 @@
+---
+title: "Festure Extraction"
+author: "Qian Shi (qs2164)"
+date: "10/28/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##### Feature Extraction for RGB #####
+```{r}
+if(!require(EBImage)){
+  source('http://bioconductor.org/biocLite.R')
+  biocLite('EBImage')
+  library('EBImage')
+}
+
+mat<- list()
+freq_RGB<- list()
+nR<- 6
+nG<- 10
+nB<- 10
+Rbin<- seq(0, 1, length.out=nR)
+Gbin<- seq(0, 1, length.out=nG)
+Bbin<- seq(0, 1, length.out=nB)
+RGB_features<- matrix(nrow=3000, ncol=nR * nG * nB)
+dim(RGB_features)   #600 features
+
+files<- list()
+img_dir<- "~/Desktop/Fall2107-Proj3-Grp7/data/training_set/images/"
+
+for(i in 1:3000){
+  mat<- imageData(readImage(paste0(img_dir, "img", "_", sprintf("%04.f", i), ".jpg")))
+  mat_RGB <-array(c(mat, mat, mat), dim =c(nrow(mat), ncol(mat), 3))
+  freq_RGB[[i]]<- as.data.frame(table(factor(findInterval(mat_RGB[, , 1], Rbin), levels=1:nR), 
+                                      factor(findInterval(mat_RGB[, , 2], Gbin), levels=1:nG), 
+                                      factor(findInterval(mat_RGB[, , 3], Bbin), levels=1:nB)))
+  RGB_features[i, ]<- as.numeric(freq_RGB[[i]]$Freq) / (ncol(mat) * nrow(mat))
+}
+
+RGB_features<- data.frame(RGB_features)
+#saveRDS(RGB_features, "../Desktop/Fall2107-Proj3-Grp7/rgb_feature2.RData")
+```
+
+
+```{r}
+label_train<- read.csv("../Desktop/Fall2107-Proj3-Grp7/data/training_set/label_train.csv")[, 2]
+names(label_train)<-"y"
+RGB_features$y<- label_train
+
+training<- sample_frac(RGB_features, 0.7, replace=FALSE)
+testing<- setdiff(RGB_features, training, 'rows')
+
+write.csv(training, file = "../Desktop/Fall2107-Proj3-Grp7/output/rgb_training2.csv", row.names = FALSE)
+write.csv(testing, file = "../Desktop/Fall2107-Proj3-Grp7/output/rgb_testing2.csv", row.names = FALSE)
+write.csv(RGB_features, file="../Desktop/Fall2107-Proj3-Grp7/output/rgb_feature2.csv", row.names = FALSE)
+```
+
+
+##### Feature Extraction for HSV #####
+```{r}
+if(!require(grDevices)){
+  install.packages('grDevices')
+  library('grDevices')
+}
+nH<- 10
+nS<- 6
+nV<- 6
+Hbin<- seq(0, 1, length.out=nH)
+Sbin<- seq(0, 1, length.out=nS)
+Vbin<- seq(0, 1, length.out=nV)
+
+mat_rgb<- mat_RGB
+mat_HSV<- list()
+freq_HSV<- list()
+HSV_features<- matrix(nrow=3000, ncol=nH * nS * nV)
+
+for(i in 1:3000){
+  dim(mat_rgb[[i]])<- c(nrow(mat_RGB[[i]]) * ncol(mat_RGB[[i]]), 3)  #Convert 3D array of RGB into 2D matrix
+  mat_HSV[[i]]<- rgb2hsv(t(mat_rgb[[i]]))
+  freq_HSV[[i]]<- as.data.frame(table(factor(findInterval(mat_HSV[[i]][1, ], Hbin), levels=1:nH), 
+                                      factor(findInterval(mat_HSV[[i]][2, ], Sbin), levels=1:nS), 
+                                      factor(findInterval(mat_HSV[[i]][3, ], Vbin), levels=1:nV)))
+  HSV_features[i, ]<- as.numeric(freq_HSV[[i]]$Freq) / (ncol(mat[[i]]) * nrow(mat[[i]]))
+}
+HSV_features<- data.frame(HSV_features)
+```
+
