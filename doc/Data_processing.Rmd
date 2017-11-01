@@ -1,5 +1,6 @@
 ---
 title: "R Notebook"
+author:"Lin Han"
 output: html_notebook
 ---
 
@@ -78,8 +79,5 @@ testing_y<- testing[ ,"y"]
 testing_x<- testing[ , !(colnames(testing) %in% c("y"))]
 ```
 
-
-###Model Selection
-###Model1: MLPClassifiers Neural Network Models
 
 
