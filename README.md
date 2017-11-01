@@ -26,19 +26,18 @@ In this project, we created a classification engine for images of Dogs, images o
    
 We can see that our baseline model is greater than random forest and SVM (linear and non-linear) under all feature selection methods. Only XGBoost gets higher accuracy than GBM based on HOG, RGB and HSV features.
 
-
-
-
   
-	
+
+
+     
+  	
 **Contribution statement**: ([default](doc/a_note_on_contributions.md)) All team members contributed equally in all stages of this project. All team members approve our work presented in this GitHub repository including this contributions statement. 
 
 + Carantino, Vassily
         
 	+ Train and test SVM (linear and non-linear) model based on SIFT, HOG and HSV   
 	(pick the best parameter of SVM model, test using cross validation) 
-	+
-	+ Make the presentation
+	+ Make the PPT and give the presentation
 + Gao, Xin          
                 
 	+ Train and test Random Forest model based on SIFT, HOG and HSV   
@@ -48,7 +47,7 @@ We can see that our baseline model is greater than random forest and SVM (linear
 + Han, Lin  
                
 	+ Data processing, include data splitting and cleaning  
-	+ Train and test MLPClassifier Neural Network model (using Python)based on SIFT, HOG and HSV
+	+ Train and test MLPClassifier Neural Network model (using Python)based on SIFT, HOG and HSV  
 	(pick the best parameter of Neural Network model, test using cross validation) 
 	+ Build the HSV and RGB function and Extract HSV and RGB features
 	+ Generate main.Rmd and feature.R
