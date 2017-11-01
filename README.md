@@ -14,12 +14,22 @@ Term: Fall 2017
 	+ 4 Li, Yijia
 	+ 5 Shi, Qian
 
-+ Project summary: In this project, we created a classification engine for images of Dogs, images of Fried Chicken and images of Blueberry Muffins. We set our baseline model using SIFT features and gradient boosting machine(GBM) classifier. Besides the SIFT features, we also used HOG, RGB and HSV to do feature selection. In terms of classifiers, we considered SVM(linear and non-linear), Random Forest, XGBoost and Neural Network. After model evaluation and comparison, the final advanced model we selected is using RGB feature and XGBoost classifier. We increased the accuracy by 12.25% and only took 13.94% of running time as in baseline model.
++ Project summary:    
+  
+In this project, we created a classification engine for images of Dogs, images of Fried Chicken and images of Blueberry Muffins. We set our baseline model using SIFT features and gradient boosting machine(GBM) classifier. Besides the SIFT features, we also used HOG, RGB and HSV to do feature selection. In terms of classifiers, we considered SVM(linear and non-linear), Random Forest, XGBoost and Neural Network. After model evaluation and comparison, the final advanced model we selected is using RGB feature and XGBoost classifier. We increased the accuracy by 12.25% and only took 13.94% of running time as in baseline model.
 
++ Outcome Analysis  
+  
 
 ![image](figs/comparison.png)
+     
+   
+We can see that our baseline model is greater than random forest and SVM (linear and non-linear) under all feature selection methods. Only XGBoost gets higher accuracy than GBM based on HOG, RGB and HSV features.
 
 
+
+
+  
 	
 **Contribution statement**: ([default](doc/a_note_on_contributions.md)) All team members contributed equally in all stages of this project. All team members approve our work presented in this GitHub repository including this contributions statement. 
 
@@ -34,7 +44,7 @@ Term: Fall 2017
 	+ Train and test Random Forest model based on SIFT, HOG and HSV   
 	(pick the best parameter of Random Forest model, test using cross validation) 
 	+ Build the HOG function
-	+ Generate README.Rmd
+	+ Generate README.Rmd and compare all the results
 + Han, Lin  
                
 	+ Data processing, include data splitting and cleaning  
