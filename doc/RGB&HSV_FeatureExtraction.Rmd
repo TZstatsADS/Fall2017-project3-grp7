@@ -1,5 +1,5 @@
 ---
-title: "RGB & HSV Festure Extraction"
+title: "RGB2 & HSV Festure Extraction"
 author: "Qian Shi (qs2164)"
 date: "10/28/2017"
 output: pdf_document
