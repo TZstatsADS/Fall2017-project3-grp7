@@ -61,8 +61,10 @@ run.feature.test = TRUE
 # }
 # cat("Time for constructing features is ", tm_feature[3], "s \n")
 # 
+# rgb_feature<- rgb_feature[ ,-1]
 # label_train<- read.csv("../data/training_set/label_train.csv")[, 2]
 # names(label_train)<- "y"
+
 # rgb_feature$y<- label_train
 # 
 # training<- sample_frac(rgb_feature, 0.7, replace=FALSE)
