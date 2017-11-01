@@ -126,6 +126,7 @@ train_gbm_para<- function(data_train, label_train, shrinks_range, trees_range, K
   }
   else{
     # Avoid overfitting
+    # Choose the second max
     best_row<- which(acu_mat == max(acu_mat[acu_mat != max(acu_mat)]), arr.ind=TRUE)[1]
     best_col<- which(acu_mat == max(acu_mat[acu_mat != max(acu_mat)]), arr.ind=TRUE)[2]
     best_shrink<- shrinks_range[best_row]

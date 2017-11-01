@@ -29,7 +29,7 @@ RGB_features<- matrix(nrow=3000, ncol=nR * nG * nB)
 dim(RGB_features)   #600 features
 
 files<- list()
-img_dir<- "~/Desktop/Fall2107-Proj3-Grp7/data/training_set/images/"
+img_dir<- "../data/training_set/images/"
 
 for(i in 1:3000){
   mat<- imageData(readImage(paste0(img_dir, "img", "_", sprintf("%04.f", i), ".jpg")))
@@ -41,21 +41,20 @@ for(i in 1:3000){
 }
 
 RGB_features<- data.frame(RGB_features)
-#saveRDS(RGB_features, "../Desktop/Fall2107-Proj3-Grp7/rgb_feature2.RData")
 ```
 
 
 ```{r}
-label_train<- read.csv("../Desktop/Fall2107-Proj3-Grp7/data/training_set/label_train.csv")[, 2]
+label_train<- read.csv("../data/training_set/label_train.csv")[, 2]
 names(label_train)<-"y"
 RGB_features$y<- label_train
 
 training<- sample_frac(RGB_features, 0.7, replace=FALSE)
 testing<- setdiff(RGB_features, training, 'rows')
 
-write.csv(training, file = "../Desktop/Fall2107-Proj3-Grp7/output/rgb_training2.csv", row.names = FALSE)
-write.csv(testing, file = "../Desktop/Fall2107-Proj3-Grp7/output/rgb_testing2.csv", row.names = FALSE)
-write.csv(RGB_features, file="../Desktop/Fall2107-Proj3-Grp7/output/rgb_feature2.csv", row.names = FALSE)
+write.csv(training, file = "../rgb_training2.csv", row.names = FALSE)
+write.csv(testing, file = "../rgb_testing2.csv", row.names = FALSE)
+write.csv(RGB_features, file="../output/rgb_feature2.csv", row.names = FALSE)
 ```
 
 
