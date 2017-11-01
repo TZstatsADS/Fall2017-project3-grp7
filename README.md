@@ -56,13 +56,13 @@ We can see that our baseline model is greater than random forest and SVM (linear
 	+ Train and test XGBoost model based on SIFT, HOG and HSV     
 	(pick the best parameter of  XGBoost model, test using cross validation) 
 	+ Extract HOG features (pick the best parameter of HOG)
-	+ Generate main.Rmd
+	+ Generate main.Rmd, train.R, test.R, and cross_validation.R
 + Shi, Qian  
         
 	+ Train and test gradient boosting machine model based on SIFT, HOG and HSV   
 	(pick the best parameter of gradient boosting machine model, test using cross validation) 
 	+ Build the HSV and RGB function and Extract HSV and RGB features
-	+ Generate main.Rmd
+	+ Generate main.Rmd, train.R, test.R, and cross_validation.R
 
 
 
