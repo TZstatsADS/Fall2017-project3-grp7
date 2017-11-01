@@ -47,5 +47,5 @@ feature <- function(img_dir, export=T){
   if(export){
     saveRDS(rgb_feature, file = "../output/rgb_feature_new.RData")
   }
-  return(rgb_feature)
+  return(data.frame(rgb_feature))
 }

@@ -1,24 +1,23 @@
 ---
 title: "Project 3-Dogs, Fried Chicken or Blueberry Muffins?"
-author: "Group7:Lin Han，Qian Shi, Yijia Li, Xin Gao"
-date: "Oct, 2017"
+author: 'Group7: Vassily Carantino, Xin Gao, Lin Han, Yijia Li, Qian Shi'
+date: "Nov 1, 2017"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
-In your final repo, there should be an R markdown file that organizes **all computational steps** for evaluating your proposed image classification framework. 
 
-This file is currently a template for running evaluation experiments of image analysis (or any predictive modeling). You should update it according to your codes but following precisely the same structure. 
 
+### Step 0: Prepare all needed packages
 ```{r, warning=FALSE}
-list.of.packages <- c("gbm","caret","randomForest","EBImage","xgboost","OpenImageR")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages))
-  {
-   install.packages(new.packages)
-   source("https://bioconductor.org/biocLite.R")
-   biocLite("EBImage")
-  }
+# list.of.packages <- c("gbm","caret","randomForest","EBImage","xgboost","OpenImageR", "dplyr")
+# new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+# if(length(new.packages))
+#   {
+#    install.packages(new.packages)
+#    source("https://bioconductor.org/biocLite.R")
+#    biocLite("EBImage")
+#   }
 library("gbm")
 library("ggplot2")
 library("caret")
@@ -26,21 +25,11 @@ library("randomForest")
 library("EBImage")
 library("xgboost")
 library("OpenImageR")
+library("dplyr")
 ```
 
-### Step 0: specify directories.
 
-Set the working directory to the image folder. Specify the training and the testing set. For data without an independent test/validation set, you need to create your own testing data by random subsampling. In order to obain reproducible results, set.seed() whenever randomization is used. 
-
-
-Provide directories for raw images. Training set and test set should be in different subfolders. 
-```{r}
-img_dir <- "../data/training_set/images/"
-#set_name=
-#data_name="data"
-```
-
-### Step 1: set up controls for evaluation experiments.
+### Step 1: Set up controls for evaluation experiments.
 
 In this chunk, ,we have a set of controls for the evaluation experiments. 
 
@@ -51,159 +40,280 @@ In this chunk, ,we have a set of controls for the evaluation experiments.
 + (T/F) process features for test set
 
 ```{r exp_setup}
-run.feature=TRUE
-# run.cv=TRUE # run cross-validation on the training set
-# K <- 5  # number of CV folds
-# run.feature.train=TRUE # process features for training set
-# run.test=TRUE # run evaluation on an independent test set
-# run.feature.test=TRUE # process features for test set
+run.feature = TRUE
+run.cv = TRUE    
+run.feature.train = TRUE    
+run.feature.test = TRUE 
 ```
 
-Using cross-validation or independent test set evaluation, we compare the performance of different classifiers or classifiers with different specifications. In this example, we use GBM with different `depth`. In the following chunk, we list, in a vector, setups (in this case, `depth`) corresponding to models that we will compare. In your project, you maybe comparing very different classifiers. You can assign them numerical IDs and labels specific to your project. 
 
-```{r model_setup}
-# model_values <- seq(3, 11, 2)
-# model_labels = paste("GBM with depth =", model_values)
-```
-
-### Step 2: import training images class labels.
-
-For the example of zip code digits, we code digit 9 as "1" and digit 7 as "0" for binary classification.
-
-```{r train_label}
-# label_train <- read.table(paste(experiment_dir, "train_label.txt", sep=""),
-#                           header=F)
-# label_train <- as.numeric(unlist(label_train) == "9")
-```
-
-### Step 3: construct visual feature
-
-For this simple example, we use the row averages of raw pixel values as the visual features. Note that this strategy **only** works for images with the same number of rows. For some other image datasets, the feature function should be able to handle heterogeneous input images. Save the constructed features to the output subfolder.
-
-`feature.R` should be the wrapper for all your feature engineering functions and options. The function `feature( )` should have options that correspond to different scenarios for your project and produces an R object that contains features that are required by all the models you are going to evaluate later. 
+### Step 2: Construct new visual features
 
 ```{r feature}
-set.seed(1)
-source("../lib/feature.R")
-tm_feature_train <- NA
-if(run.feature)
-{
-  tm_feature <- system.time(rgb_feature <- feature(img_dir, 
-                                                        export=TRUE))
-}
-tm_feature
-label_train<- read.csv("../data/training_set/label_train.csv")
-training_y<- matrix(label_train[, 2],ncol=1)
-colnames(training_y)<-"y"
-rgb_feature$y<- training_y
-training<- sample_frac(rgb_feature, 0.7, replace=FALSE)
-testing<- setdiff(rgb_feature, training, 'rows')
-
-#save(dat_train, file="../output/rgb_new_train.RData")
-#save(dat_test, file="../output/rgb_new_test.RData")
+# source("../lib/feature.R")
+# set.seed(1)
+# 
+# img_dir<- "../data/training_set/images/"
+# tm_feature<- c()
+# if(run.feature)
+# {
+#   tm_feature <- system.time(rgb_feature <- feature(img_dir, export=TRUE))
+# }
+# cat("Time for constructing features is ", tm_feature[3], "s \n")
+# 
+# label_train<- read.csv("../data/training_set/label_train.csv")[, 2]
+# names(label_train)<- "y"
+# rgb_feature$y<- label_train
+# 
+# training<- sample_frac(rgb_feature, 0.7, replace=FALSE)
+# testing<- setdiff(rgb_feature, training, 'rows')
+# 
+# write.csv(training, file="../output/rgb_new_training.csv")
+# write.csv(testing, file="../output/rgb_new_testing.csv")
 ```
 
-### Step 4: Train a classification model with training images
-Call the train model and test model from library. 
 
-`train.R` and `test.R` should be wrappers for all your model training steps and your classification/prediction steps. 
-+ `train.R`
-  + Input: a path that points to the training set features.
-  + Input: an R object of training sample labels.
-  + Output: an RData file that contains trained classifiers in the forms of R objects: models/settings/links to external trained configurations.
-+ `test.R`
-  + Input: a path that points to the test set features.
-  + Input: an R object that contains a trained classifier.
-  + Output: an R object of class label predictions on the test set. If there are multiple classifiers under evaluation, there should be multiple sets of label predictions. 
+### Step 3: Models Training and Parameters Selection
+
+Training Gradient Boosting Model (baseline) and XGboost model on original SIFT features by cross validation.
+
 ```{r loadlib}
 source("../lib/train.R")
 source("../lib/test.R")
-```
-
-
-###Model:MLPClassifier Neural Network
-```{r}
-mlpcv<- c(0.759,0.762, 0.763,0.765,0.764,0.77,0.765,0.767,0.763,0.769)
-x<- seq(100,200,10)[-11]
-plot(x,mlpcv,type="l",xlab="hidden layers", ylab="CV accuarcy")
-```
-We use python scikit-learn library to write MLPClassifier Neural Network Model, testing hidden layer from 1 to 200, and from the above plot, we can get the best hidden layer size=150. Besides, I use stochastic gradient-based optimizer with $beta_1=0.9, $beta_2=0.99, $epsilon=1e-08, the rectified linear unit function to be activition, learning rate to be 0.001. Next, I used all features in the model, like SIFT, HOG, HSV, RGB, using k folds cross-validation to get the accuarcy, and the resuls are as following:
-	     CV	Accuracy    
-HSV  	       77%	        
-RGB	       77.80%	    
-RGB1	       76.20%	     
-RGB2	       77.60%       
-HOG	       82.20%	      
-SIFT	       73%	        
-We can see that the MLPClassifier Model with HOG features is the best. In other models , we can find that RGB(10*12*12) feature is the best which is quite different from MLPClassifier model.
-
-
-#### Model selection with cross-validation
-* Do model selection by choosing among different values of training model parameters, that is, the interaction depth for GBM in this example. 
-```{r runcv, message=FALSE, warning=FALSE}
 source("../lib/cross_validation.R")
+```
 
-if(run.cv){
-  err_cv <- array(dim=c(length(model_values), 2))
-  for(k in 1:length(model_values)){
-    cat("k=", k, "\n")
-    err_cv[k,] <- cv.function(dat_train, label_train, model_values[k], K)
-  }
-  save(err_cv, file="../output/err_cv.RData")
+#### Baseline Model: GBM 
+
+##### Parameters training on Original 5000 SIFT features
+
+* Load SIFT features
+```{r}
+train_SIFT<- readRDS('../output/training.RData')
+X_trainSIFT<- train_SIFT[, -5001]
+y_trainSIFT<- train_SIFT$y
+```
+
+* Choice for parameter values
+To find the best parameters for Gradient Boosting Model (GBM), we set interaction depth fixed to 3, trees numbers from 200 to 600, and shrinkage values from 0.01 to 0.07.
+```{r}
+trees_range<- seq(200, 600, 200)
+shrinks_range<- seq(0.01, 0.07, 0.02)
+```
+
+* Find the best parameters by cross validation 
+```{r}
+# K<- 3
+# if(run.cv){
+#   best_paras<- train_gbm_para(X_trainSIFT, y_trainSIFT, shrinkage_range, trees_range, K)
+# }
+```
+
+* The best parameters
+```{r}
+# if(run.cv){
+#   best_shrink<- best_paras$shrink
+#   best_trees<- best_paras$ntrees
+# }
+best_shrink<- 0.07
+best_trees<- 600
+```
+
+* Visualize the outcomes of CV
+```{r}
+# if(run.cv){
+#   acu_mat<- best_paras$acu_mat
+#   
+#   plot(shrinks_range, acu_mat[, 1], 
+#        xlab='Shrinkage', ylab="Accuracy", main="Cross Validation Accuracy for GBM", 
+#        type="b", pch=1, ylim=c(0.76, 0.84))
+#   
+#   for(i in 2:length(trees_range)){
+#      lines(shrinks_range, acu_mat[, i], type='b', col=i, pch=i)
+#   }
+#   
+#   legend("bottomright", paste("Trees = ", trees_range), 
+#          col=1:length(trees_range), pch=1:length(trees_range), lty=1, cex=0.7)
+# }
+```
+From the above plot we can see that, the best parameters for GBM model is shrinkage = 0.01 and n.trees = 600. However, this accuracy is greater than 80%. In order to avoid overfitting, we choose parameters corresponding to the second largest accuracy, that is shrinkage = 0.07 and n.trees = 600. 
+Next, we use all kinds of features in this GBM model, like SIFT, HOG, HSV, RGB, using k folds cross-validation to get the average accuarcy. The resuls are showing below: 
+           CV_Acu
+    RGB1	 89.7%
+    HSV    87.5%
+    HOG	   82.2%
+    SIFT	 81.0%
+We can see that GBM with RGB1 features is the best combination.
+
+##### Fit the best GBM on entire training SIFT and RGB features separately
+
+* GBM & Original 5000 SIFT features
+```{r}
+train_SIFT<- readRDS('../output/training.RData')
+X_trainSIFT<- train_SIFT[, -5001]
+y_trainSIFT<- train_SIFT$y
+tm_SIFT<- c()
+
+if(run.feature.train){
+  tm_SIFT<- system.time(train_SIFT_gbm<- gbm_train(X_trainSIFT, y_trainSIFT, best_shrink, best_trees))
+}
+cat("Train the best GBM on entire training SIFT features is ", tm_SIFT[3], "s \n")
+#saveRDS(train_SIFT_gbm, file="../output/train_SIFT_gbm.RData")
+```
+
+* GBM & 1440 RGB features
+```{r}
+train_RGB<- read.csv('../output/rgb_training1.csv')
+X_trainRGB<- train_RGB[, -1441]
+y_trainRGB<- train_RGB$y
+tm_RGB<- c()
+
+if(run.feature.train){
+  tm_RGB<- system.time(train_RGB_gbm<- gbm_train(X_trainRGB, y_trainRGB, best_shrink, best_trees))
+}
+cat("Train the best GBM on entire training RGB features is ", tm_RGB[3], "s \n")
+#saveRDS(train_RGB_gbm, file="../output/train_RGB_gbm.RData")
+```
+
+
+#### Prefer Model: Xgboost
+
+##### Parameters training on 1440 RGB features
+
+* Load RGB features
+```{r}
+train_RGB<- read.csv('../output/rgb_feature1.csv')
+X_trainRGB<- train_RGB[, -1441]
+y_trainRGB<- train_RGB$y
+```
+
+* Find the best parameters by cross validation  
+```{r}
+# K<- 5
+# if(run.cv){
+#   xgbcv_result <- xgb_para(X_trainRGB, y_trainRGB, K)
+# }
+```
+
+* The best parameters
+```{r}
+# if(run.cv){
+#   best_par <- xgbcv_result[2]
+#   par_best <- list(max_depth = best_par[[1]]$max_depth, eta = best_par[[1]]$eta,
+#                    nrounds = 100, gamma = 0,
+#                    nthread = 2, subsample = 0.5,
+#                    objective = "multi:softprob", num_class = 3)
+# }
+par_best <- list(max_depth = 3, eta = 0.3,
+                 nrounds = 100, gamma = 0,
+                 nthread = 2, subsample = 0.5,
+                 objective = "multi:softprob", num_class = 3)
+```
+
+* Visualize the outcomes of CV
+```{r}
+# if(run.cv){
+#   error_mat <- 1-xgbcv_result[[1]]
+#   plot(c(0.1,0.3,0.5), error_mat[1,], 
+#        xlab='eta', ylab='CV Accuracy', main='Cross Validation Accuracy',
+#        type='b', pch=1, ylim=c(0.85,0.95))
+#   for(i in 2:3){
+#     lines(c(0.1,0.3,0.5), error_mat[i,], type='b', col=i, pch=i)
+#   }
+#   legend('bottomright', paste('max_depth=', c(3,5,7)),
+#          col=1:3, pch=1:3, lty=1, cex=0.6)
+# }
+```
+For Xgboost Model, we tested parameters first, max_depth from (3,5,7), and eta from (0.1,0.3,0.5). 
+From the above plot, we can get the best parameters are, max_depth = 3 and eta = 0.3, since it has the highest accuracy. 
+Next, we used all kinds of features into this Xgboost model, like SIFT, HOG, HSV, RGB, using k folds cross-validation to get the accuarcy. The resuls are showing below: 
+             CV_Acu
+     RGB1	   90.7%
+     HSV     89.3%
+     HOG  	 84.8%
+     SIFT	   79.8%
+We can see that Xgboost Model with RGB1 features is the best combination.
+
+##### Fit the best Xgboost model on entire training RGB features
+
+```{r}
+train_RGB<- read.csv('../output/rgb_training1.csv')
+X_trainRGB<- train_RGB[, -1441]
+y_trainRGB<- train_RGB$y
+
+tm_train<- c()
+
+if(run.feature.train){
+  tm_train <- system.time(train_RGB_xgb <- xgb_train(X_trainRGB, y_trainRGB, par_best))
+}
+
+cat("Train the best Xgboost on entire training RGB features is ", tm_train[3], "s \n")
+#saveRDS(train_RGB_xgb, file="../output/train_RGB_xgb.RData")
+```
+
+
+### Step 4: Make prediction on testing datasets
+
+#### Fit the best GBM model on testing SIFT and RGB features separately
+
+* GBM & Original 5000 SIFT features
+```{r}
+tm.SIFT_test_gbm<- c()
+if(run.feature.test){
+  test_SIFT<- readRDS('../output/testing.RData')
+  X_test<- test_SIFT[, -5001]
+  y_test<- test_SIFT$y
+  
+  #load(file="../output/train_SIFT_gbm.RData")
+  
+  tm.SIFT_test_gbm<- system.time(pred_SIFT_gbm<- gbm_test(train_SIFT_gbm, X_test))
+  acu_SIFT_gbm<- sum(pred_SIFT_gbm == y_test) / length(y_test)
+  
+  cat("GBM accuracy for original SIFT features is ", acu_SIFT_gbm, "\n")
+  cat("Time for fitting GBM on testing SIFT features is ", tm.SIFT_test_gbm[3], "s \n")
+  
+  #saveRDS(pred_SIFT_gbm, file="../output/pred_SIFT_gbm.RData")
 }
 ```
 
-Visualize cross-validation results. 
-
-```{r cv_vis}
-if(run.cv){
-  load("../output/err_cv.RData")
-  #pdf("../fig/cv_results.pdf", width=7, height=5)
-  plot(model_values, err_cv[,1], xlab="Interaction Depth", ylab="CV Error",
-       main="Cross Validation Error", type="n", ylim=c(0, 0.25))
-  points(model_values, err_cv[,1], col="blue", pch=16)
-  lines(model_values, err_cv[,1], col="blue")
-  arrows(model_values, err_cv[,1]-err_cv[,2], model_values, err_cv[,1]+err_cv[,2], 
-        length=0.1, angle=90, code=3)
-  #dev.off()
+* GBM & 1440 RGB features
+```{r}
+tm.RGB_test_gbm<- c()
+if(run.feature.test){
+   test_RGB<- read.csv('../output/rgb_testing1.csv')
+   X_test<- test_RGB[, -1441]
+   y_test<- test_RGB$y
+   
+   #load(file="../output/train_RGB_gbm.RData")
+   
+   tm.RGB_test_gbm<- system.time(pred_RGB_gbm<- gbm_test(train_RGB_gbm, X_test))
+   acu_RGB_gbm<- sum(pred_RGB_gbm == y_test) / length(y_test)
+   
+   cat("GBM accuracy for RGB features is ", acu_RGB_gbm, "\n")
+   cat("Time for fitting GBM on testing RGB features is ", tm.RGB_test_gbm[3], "s \n")
+   
+   #saveRDS(pred_RGB_gbm, file="../output/pred_RGB_gbm.RData")
 }
 ```
 
 
-* Choose the "best"" parameter value
-```{r best_model}
-model_best=model_values[1]
-if(run.cv){
-  model_best <- model_values[which.min(err_cv[,1])]
-}
+#### Fit the best Xgboost model on testing RGB features
 
-par_best <- list(depth=model_best)
-```
-
-* Train the model with the entire training set using the selected model (model parameter) via cross-validation.
-```{r final_train}
-tm_train=NA
-tm_train <- system.time(fit_train <- train(dat_train, label_train, par_best))
-save(fit_train, file="../output/fit_train.RData")
-```
-
-### Step 5: Make prediction 
-Feed the final training model with the completely holdout testing data. 
-```{r test}
-tm_test=NA
-if(run.test){
-  load(file=paste0("../output/feature_", "zip", "_", "test", ".RData"))
-  load(file="../output/fit_train.RData")
-  tm_test <- system.time(pred_test <- test(fit_train, dat_test))
-  save(pred_test, file="../output/pred_test.RData")
+```{r}
+tm_test<- c()
+if(run.feature.test){
+  test_RGB<- read.csv('../output/rgb_testing1.csv')
+  X_test<- test_RGB[, -1441]
+  y_test<- test_RGB$y
+  
+  #load(file="../output/train_RGB_xgb.RData")
+  tm_test <- system.time(pred_RGB_xgb <- xgb_test(train_RGB_xgb, X_test))
+  cat("Time for fitting Xgboost on testing RGB features is ", tm_test[3], "s \n")
+  
+  error <- sum(pred_RGB_xgb != y_test)/length(y_test)
+  cat("Xgboost accuracy for RGB features is ", 1-error, "\n")
+  
+  #saveRDS(pred_RGB_xgb, file="../output/pred_RGB_xgb.RData")
 }
 ```
 
-### Summarize Running Time
-Prediction performance matters, so does the running times for constructing features and for training the model, especially when the computation resource is limited. 
-```{r running_time}
-cat("Time for constructing training features=", tm_feature_train[1], "s \n")
-cat("Time for constructing testing features=", tm_feature_test[1], "s \n")
-cat("Time for training model=", tm_train[1], "s \n")
-cat("Time for making prediction=", tm_test[1], "s \n")
-```

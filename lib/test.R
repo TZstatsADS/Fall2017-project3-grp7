@@ -2,25 +2,29 @@
 ### Fit the classification model with testing data ###
 ######################################################
 
-### Author: Yuting Ma
+### Authors: Qian Shi, Yijia Li
 ### Project 3
-### ADS Spring 2016
+### ADS Fall2017_GROUP7
 
-test <- function(fit_train, dat_test){
+
+## GBM
+gbm_test<- function(fit_model, dat_test){
   
-  ### Fit the classfication model with testing data
-  
-  ### Input: 
-  ###  - the fitted classification model using training data
-  ###  -  processed features from testing images 
-  ### Output: training model specification
-  
-  ### load libraries
   library("gbm")
-  
-  pred <- predict(fit_train$fit, newdata=dat_test, 
-                  n.trees=fit_train$iter, type="response")
-  
-  return(as.numeric(pred> 0.5))
+  pred <- predict.gbm(fit_model$model, 
+                      dat_test, 
+                      n.trees=fit_model$ntrees, 
+                      type="response")
+  pred_lab<- apply(pred, 1, which.max) - 1
+  return(pred_lab)
 }
 
+## Xgboost
+xgb_test<- function(model, x){
+  
+  library("xgboost")
+  pred <- predict(model, as.matrix(x))
+  pred <- matrix(pred, ncol=3, byrow=TRUE)
+  pred_labels <- max.col(pred) - 1
+  return(pred_labels)
+}

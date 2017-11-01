@@ -18,24 +18,22 @@ if(!require(EBImage)){
 
 
 # Pick 9 images to do image exploration
-setwd("~/Desktop/Fall2107-Proj3-Grp7/data/training_set/images")
-i1.c<- readImage('img_0003.jpg')
-i2.c<- readImage('img_0687.jpg')
-i3.c<- readImage('img_0610.jpg')
+i1.c<- readImage('../data/training_set/images/img_0003.jpg')
+i2.c<- readImage('../data/training_set/images/img_0687.jpg')
+i3.c<- readImage('../data/training_set/images/img_0610.jpg')
 
-i1.d<- readImage('img_0049.jpg')
-i2.d<- readImage('img_0719.jpg')
-i3.d<- readImage('img_0484.jpg')
+i1.d<- readImage('../data/training_set/images/img_0049.jpg')
+i2.d<- readImage('../data/training_set/images/img_0719.jpg')
+i3.d<- readImage('../data/training_set/images/img_0484.jpg')
 
-i1.m<- readImage('img_0731.jpg')
-i2.m<- readImage('img_0195.jpg')
-i3.m<- readImage('img_0853.jpg')
+i1.m<- readImage('../data/training_set/images/img_0731.jpg')
+i2.m<- readImage('../data/training_set/images/img_0195.jpg')
+i3.m<- readImage('../data/training_set/images/img_0853.jpg')
 
 filenames<- list(i1.c, i2.c, i3.c, i1.d, i2.d, i3.d, i1.m, i2.m, i3.m)
 
 for(i in 1:9){
-  options("EBImage.display"= "raster") 
-  display(filenames[[i]])
+  display(filenames[[i]], method="raster")
   hist(filenames[[i]])
 }
 ```
