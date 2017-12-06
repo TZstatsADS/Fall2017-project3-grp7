@@ -61,7 +61,7 @@ We can see that our baseline model is greater than random forest and SVM (linear
         
 	+ Train and test gradient boosting machine model based on RGB, SIFT, HOG and HSV   
 	(pick the best parameter of gradient boosting machine model, test using cross validation)
-       +  Conduct image exploration before extracting RGB features, and determine a possible range of values for the parameters that used in extracting RGB features.
+       + Conduct image exploration before extracting RGB features, and determine a possible range of values for the parameters that used in extracting RGB features.
 	+ Build the HSV and RGB function and Extract HSV and RGB features
 	+ Generate main.Rmd, train.R, test.R, and cross_validation.R
 
